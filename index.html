@@ -78,7 +78,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 <footer class="footer">Created by Kailea ♡</footer></div>
 <script>
 const $=id=>document.getElementById(id);
-let db=null,unsubs=[],room='',uid='anon',tracks=[],cur=null,curKey='';
+let db=null,unsubs=[],room='',uid='anon',tracks=[],cur=null,curKey='';uid='local-'+Math.random().toString(36).slice(2);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 $('name').value=ls.get('md-name')||'';$('room').value=ls.get('md-room')||'kita';
 const clean=s=>s.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'kita';
@@ -86,10 +86,10 @@ function vid(u){const m=u.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-
 function render(){
   if(!cur||!cur.vid){return}
   const k=cur.vid+'|'+cur.startedAt;if(k===curKey)return;curKey=k;
-  const s=Math.max(0,Math.floor((Date.now()-cur.startedAt)/1000));
+  const s=Math.max(0,Math.floor((Date.now()-(Number(cur.startedAt)||Date.now()))/1000));
   $('player').innerHTML='';const f=document.createElement('iframe');
   f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;
-  f.src='https://www.youtube-nocookie.com/embed/'+cur.vid+'?autoplay=1&rel=0&start='+s;
+  f.src='https://www.youtube.com/embed/'+encodeURIComponent(cur.vid)+'?autoplay=1&rel=0&start='+s;
   $('player').appendChild(f);$('now').textContent='🎵 '+(cur.title||'Lagu')
 }
 async function setCur(t){const d={vid:t.vid,title:t.title||'',startedAt:Date.now()};cur=d;curKey='';render();
@@ -115,7 +115,7 @@ function drawChat(docs){
 async function join(){
   unsubs.forEach(u=>u());unsubs=[];curKey='';
   room=clean($('room').value);ls.set('md-room',room);ls.set('md-name',$('name').value);
-  if(!db){$('warn').hidden=false;$('warn').textContent='Mode pribadi: playlist disimpan di browser ini. Chat dan sinkronisasi antar perangkat membutuhkan backend.';try{const v=JSON.parse(ls.get('together-'+room)||'{}');tracks=v.tracks||[];cur=v.cur||null;drawList();render()}catch(e){}return}
+  if(!db){$('warn').hidden=false;$('warn').textContent='Mode pribadi aktif 🌷 Playlist dan chat tersimpan di browser ini. Untuk nonton dan chat antar perangkat, diperlukan server bersama.';tracks=[];cur=null;curKey='';$('player').textContent='Tambahkan video YouTube untuk mulai menonton 🎶';$('now').textContent='';try{const v=JSON.parse(ls.get('together-'+room)||'{}');tracks=Array.isArray(v.tracks)?v.tracks:[];cur=v.cur||null}catch(e){}drawList();render();drawLocalChat();return}
   unsubs.push(db.doc('rooms/'+room+'/meta/state').onSnapshot(s=>{if(s.exists){cur=s.data();render()}},()=>{$('warn').hidden=false}));
   unsubs.push(db.collection('rooms/'+room+'/playlist').orderBy('at','asc').limit(200).onSnapshot(q=>{tracks=q.docs.map(d=>({id:d.id,...d.data()}));drawList()},()=>{$('warn').hidden=false}));
   unsubs.push(db.collection('rooms/'+room+'/chat').orderBy('at','asc').limit(150).onSnapshot(q=>drawChat(q.docs),()=>{}));
@@ -129,7 +129,8 @@ $('add').onclick=async()=>{const v=vid($('url').value);if(!v){alert('Link YouTub
   if(!cur)setCur(t)};
 $('restart').onclick=()=>cur&&setCur(cur);
 $('next').onclick=()=>{if(!tracks.length)return;const i=tracks.findIndex(t=>cur&&t.vid===cur.vid);setCur(tracks[(i+1)%tracks.length])};
-async function send(){const x=$('txt').value.trim();if(!x||!db)return;$('txt').value='';
+function drawLocalChat(){const el=$('msgs');el.replaceChildren();let arr=[];try{arr=JSON.parse(ls.get('together-chat-'+room)||'[]')}catch(e){}for(const v of arr){const e=document.createElement('div');e.className='m'+(v.uid===uid?' me':'');const n=document.createElement('small');n.textContent=v.name||'Seseorang';const t=document.createElement('span');t.textContent=v.text;e.append(n,t);el.append(e)}el.scrollTop=el.scrollHeight}
+async function send(){const x=$('txt').value.trim();if(!x)return;if(!db){let arr=[];try{arr=JSON.parse(ls.get('together-chat-'+room)||'[]')}catch(e){}arr.push({text:x.slice(0,500),name:$('name').value.trim()||'Aku',uid});ls.set('together-chat-'+room,JSON.stringify(arr.slice(-100)));$('txt').value='';drawLocalChat();return}$('txt').value='';
   try{await db.doc('rooms/'+room+'/chat/'+Date.now()+'-'+Math.random().toString(36).slice(2,6)).set({text:x.slice(0,500),name:$('name').value||'Seseorang',uid,at:Date.now()})}catch(e){$('warn').hidden=false}}
 $('send').onclick=send;$('txt').onkeydown=e=>{if(e.key==='Enter')send()};
 (async()=>{
@@ -147,7 +148,7 @@ const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),6500);
 try{const r=await fetch(host+'/api/v1/search?q='+encodeURIComponent(q)+'&type=video',{signal:ctrl.signal});if(!r.ok)throw Error('Unavailable');const d=await r.json();if(Array.isArray(d)){results=d;break}}catch(e){}finally{clearTimeout(timer)}
 }
 if(!results)throw Error('Search unavailable');
-const items=results.filter(x=>/^[\\w-]{11}$/.test(x.videoId||'')).slice(0,12);
+const items=results.filter(x=>typeof x.videoId==='string' && x.videoId.length===11 && [...x.videoId].every(c=>'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-'.includes(c))).slice(0,12);
 $('search-status').textContent=items.length+' hasil ditemukan';
 for(const item of items){
 const d=document.createElement('div');d.className='search-result';

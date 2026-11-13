@@ -35,12 +35,56 @@ service cloud.firestore {
         allow delete: if signedIn() && validRoom(roomId);
         allow update: if false;
       }
+      match /presence/{userId} {
+        allow read: if signedIn() && validRoom(roomId);
+        allow create, update: if signedIn() && validRoom(roomId)
+          && userId == request.auth.uid
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'at'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.at is number;
+        allow delete: if signedIn() && userId == request.auth.uid;
+      }
       match /chat/{messageId} {
         allow read: if signedIn() && validRoom(roomId);
         allow create: if signedIn() && validRoom(roomId)
-          && request.resource.data.keys().hasOnly(['text', 'name', 'uid', 'at'])
+          && request.resource.data.keys().hasOnly(['text', 'image', 'name', 'uid', 'at'])
           && request.resource.data.text is string
-          && request.resource.data.text.size() > 0
+          && (request.resource.data.text.size() > 0 || (request.resource.data.keys().hasAny(['image']) && request.resource.data.image is string && request.resource.data.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+
+          && request.resource.data.text.size() <= 500
+          && (!request.resource.data.keys().hasAny(['image']) || (request.resource.data.image is string && request.resource.data.image.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.at is number;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
+) && request.resource.data.image.size() <= 650000))
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.at is number;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
+) && request.resource.data.image.size() <= 650000))
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.at is number;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
+) && request.resource.data.image.size() <= 650000))
           && request.resource.data.text.size() <= 500
           && request.resource.data.name is string
           && request.resource.data.name.size() <= 20

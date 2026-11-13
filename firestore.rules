@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function validRoom(roomId) {
+      return roomId.matches('^[a-z0-9_-]{1,20}$');
+    }
+    match /rooms/{roomId} {
+      allow read: if signedIn() && validRoom(roomId);
+      allow create, update: if signedIn() && validRoom(roomId)
+        && request.resource.data.keys().hasOnly(['playback'])
+        && request.resource.data.playback.keys().hasOnly(['vid', 'title', 'position', 'paused', 'updatedAt'])
+        && request.resource.data.playback.vid is string
+        && request.resource.data.playback.vid.matches('^[A-Za-z0-9_-]{11}$')
+        && request.resource.data.playback.title is string
+        && request.resource.data.playback.title.size() <= 150
+        && request.resource.data.playback.position is number
+        && request.resource.data.playback.position >= 0
+        && request.resource.data.playback.paused is bool
+        && request.resource.data.playback.updatedAt is number;
+      allow delete: if false;
+      match /playlist/{itemId} {
+        allow read: if signedIn() && validRoom(roomId);
+        allow create: if signedIn() && validRoom(roomId)
+          && request.resource.data.keys().hasOnly(['vid', 'title', 'by', 'at'])
+          && request.resource.data.vid is string
+          && request.resource.data.vid.matches('^[A-Za-z0-9_-]{11}$')
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 150
+          && request.resource.data.by is string
+          && request.resource.data.by.size() <= 20
+          && request.resource.data.at is number;
+        allow delete: if signedIn() && validRoom(roomId);
+        allow update: if false;
+      }
+      match /chat/{messageId} {
+        allow read: if signedIn() && validRoom(roomId);
+        allow create: if signedIn() && validRoom(roomId)
+          && request.resource.data.keys().hasOnly(['text', 'name', 'uid', 'at'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.name is string
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.at is number;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

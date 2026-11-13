@@ -66,7 +66,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 <div class="now" id="now"></div><div class="watch-tools"><button id="start-video" class="pink">▶ Mulai video di perangkat ini</button><input id="seek" type="range" min="0" max="100" value="0" aria-label="Posisi video"><small id="time">0:00 / 0:00</small><button id="sync-now" class="soft">↻ Sinkronkan</button></div><p class="note" id="player-note">Klik Mulai video jika browser memblokir autoplay. Geser progress untuk mengubah posisi tontonan bersama.</p>
 <div class="row"><button id="pause" class="soft">⏸ Pause bareng</button><button id="resume" class="soft">▶ Play bareng</button><button id="restart" class="soft">↺ Ulang bareng</button><button id="next" class="soft">⏭ Lagu berikutnya</button></div>
 </div>
-<div class="card p" style="margin-top:14px"><h2>🔎 Cari di YouTube</h2><div class="row"><input id="query" placeholder="Cari judul lagu atau video…" aria-label="Cari YouTube"><button class="pink" id="search">Cari ✨</button></div><div class="row" style="margin-top:8px"><input id="yt-api-key" type="password" placeholder="YouTube API key (pengaturan sekali)" autocomplete="off" aria-label="YouTube Data API key"><button id="save-yt-key" class="soft">Simpan key</button></div><p class="note" id="search-status">Untuk pencarian video langsung, aktifkan YouTube Data API v3 dan masukkan API key. Key disimpan di browser ini saja.</p><div id="search-results" class="search-results"></div></div><div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
+<div class="card p" style="margin-top:14px"><h2>🔎 Cari di YouTube</h2><div class="row"><input id="query" placeholder="Cari judul lagu atau video…" aria-label="Cari YouTube"><button class="pink" id="search">Cari ✨</button></div><p class="note" id="search-status">Ketik judul video, pilih hasilnya, lalu klik + Playlist ♡</p><div id="search-results" class="search-results"></div></div><div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
 <div class="row"><input id="url" placeholder="Link YouTube 🔗"><input id="ttl" placeholder="Judul (opsional)"><button id="add" class="pink">+ Tambah</button></div>
 <div class="list" id="list"></div></div>
 </div>
@@ -144,12 +144,11 @@ $('next').onclick=()=>{if(!tracks.length)return;const index=tracks.findIndex(t=>
 async function send(){const input=$('txt');const text=input.value.trim().slice(0,500);if(!text)return;try{if(mode==='online'){if(!roomReady.chat)throw Error('Chat belum terhubung. Periksa status Firebase di atas.');await roomDoc().collection('chat').add({text,name:name(),uid,at:Date.now()})}else{const items=localChat();items.push({text,name:name(),uid});store.set('together-chat-'+room,JSON.stringify(items.slice(-100)));drawChat(items)}input.value=''}catch(e){setStatus('Gagal mengirim chat: '+e.message)}}
 $('send').onclick=send;$('txt').onkeydown=e=>{if(e.key==='Enter')send()};
 
-$('yt-api-key').value=store.get('together-yt-key')||'';
-$('save-yt-key').onclick=()=>{const key=$('yt-api-key').value.trim();if(!key){store.set('together-yt-key','');$('search-status').textContent='API key dihapus dari browser ini.';return}store.set('together-yt-key',key);$('search-status').textContent='API key tersimpan di browser ini ♡ Sekarang coba cari video!'};
+const YOUTUBE_SEARCH_API_KEY = "AIzaSyDHQTueDDttavt83AuTyJUviSghPY2Pa5o";
 async function searchVideos(){
  const q=$('query').value.trim();if(!q)return;
- const key=store.get('together-yt-key')||'';
- if(!key){$('search-status').textContent='Masukkan YouTube Data API key di bawah kotak pencarian, lalu klik Simpan key.';$('yt-api-key').focus();return}
+ const key=YOUTUBE_SEARCH_API_KEY;
+ 
  $('search').disabled=true;$('search-status').textContent='Mencari "'+q+'"…';$('search-results').replaceChildren();
  try{
  const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=12&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(key);

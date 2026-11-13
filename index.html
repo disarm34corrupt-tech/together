@@ -51,7 +51,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 .m.me{align-self:flex-end;background:var(--p1);color:var(--tx)}
 .m small{display:block;font-size:.7rem;opacity:.7}
 .note{font-size:.8rem;color:var(--mut);text-align:center;margin-top:10px}
-.search-results{display:grid;gap:8px;margin:10px 0;max-height:340px;overflow:auto}.search-result{display:flex;gap:9px;align-items:center;background:var(--bg);padding:8px;border-radius:14px}.search-result img{width:100px;aspect-ratio:16/9;object-fit:cover;border-radius:8px}.search-result strong{flex:1;font-size:.85rem;overflow-wrap:anywhere}.search-result button{padding:8px}.footer{text-align:center;color:var(--mut);font-size:.85rem;margin:24px 0 8px}</style></head><body><div class="wrap">
+.search-results{display:grid;gap:8px;margin:10px 0;max-height:340px;overflow:auto}.search-result{display:flex;gap:9px;align-items:center;background:var(--bg);padding:8px;border-radius:14px}.search-result img{width:100px;aspect-ratio:16/9;object-fit:cover;border-radius:8px}.search-result strong{flex:1;font-size:.85rem;overflow-wrap:anywhere}.search-result button{padding:8px}.footer{text-align:center;color:var(--mut);font-size:.85rem;margin:24px 0 8px}.mini-mode .top,.mini-mode .grid>.card.chat,.mini-mode .grid>div>.card.p,.mini-mode .footer,.mini-mode .wrap>h1,.mini-mode .wrap>p,.mini-mode #warn,.mini-mode #popout,.mini-mode #pip-help{display:none!important}.mini-mode .wrap{max-width:650px;padding:8px}.mini-mode .grid{display:block}.mini-mode .grid>div>.card:first-child{padding:10px}.mini-mode .tv{padding-top:0}.mini-mode .ant,.mini-mode .legs,.mini-mode .side{display:none}.mini-mode .tvb{padding:5px;border-radius:16px}.mini-mode .screen{border-width:2px;padding:2px}.mini-mode .card{border-radius:16px}.mini-mode .watch-tools{margin:5px 0}.mini-mode .now{font-size:.85rem;margin:5px}.mini-mode .row button{padding:7px 10px;font-size:.8rem}</style></head><body><div class="wrap">
 <h1>Together <span>♡</span> 📺</h1>
 <div class="top">
 <input id="name" placeholder="Namamu 🌸" size="10" maxlength="20">
@@ -63,7 +63,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 <div>
 <div class="card"><h2>🎧 Lagi diputar bareng</h2>
 <div class="tv"><div class="ant"><i></i><i></i></div><div class="tvb"><div class="screen"><div class="player" id="player">Tempel link YouTube di bawah lalu pilih lagunya 🎶</div></div><div class="side"><span class="knob"></span><span class="knob pk"></span><div class="spk"></div></div></div><div class="legs"><i></i><i></i></div></div>
-<div class="now" id="now"></div><div class="watch-tools"><button id="start-video" class="pink">▶ Mulai video di perangkat ini</button><input id="seek" type="range" min="0" max="100" value="0" aria-label="Posisi video"><small id="time">0:00 / 0:00</small><button id="sync-now" class="soft">↻ Sinkronkan</button></div><p class="note" id="player-note">Klik Mulai video jika browser memblokir autoplay. Geser progress untuk mengubah posisi tontonan bersama.</p>
+<div class="now" id="now"></div><div class="row" style="margin-bottom:10px"><button id="popout" class="pink">↗ Buka mini player</button><button id="pip-help" class="soft">▣ Mode mengambang?</button></div><div class="watch-tools"><button id="start-video" class="pink">▶ Mulai video di perangkat ini</button><input id="seek" type="range" min="0" max="100" value="0" aria-label="Posisi video"><small id="time">0:00 / 0:00</small><button id="sync-now" class="soft">↻ Sinkronkan</button></div><p class="note" id="player-note">Klik Mulai video jika browser memblokir autoplay. Geser progress untuk mengubah posisi tontonan bersama.</p>
 <div class="row"><button id="pause" class="soft">⏸ Pause bareng</button><button id="resume" class="soft">▶ Play bareng</button><button id="restart" class="soft">↺ Ulang bareng</button><button id="next" class="soft">⏭ Lagu berikutnya</button></div>
 </div>
 <div class="card p" style="margin-top:14px"><h2>🔎 Cari di YouTube</h2><div class="row"><input id="query" placeholder="Cari judul lagu atau video…" aria-label="Cari YouTube"><button class="pink" id="search">Cari ✨</button></div><p class="note" id="search-status">Ketik judul video, pilih hasilnya, lalu klik + Playlist ♡</p><div id="search-results" class="search-results"></div></div><div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
@@ -80,6 +80,9 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 
 const firebaseConfig = {"apiKey":"AIzaSyBVvCwiFkgKQUP-ThhkvJ54B7ySQ0bJVAA","authDomain":"together-kailea.firebaseapp.com","projectId":"together-kailea","storageBucket":"together-kailea.firebasestorage.app","messagingSenderId":"173319646009","appId":"1:173319646009:web:4e9c255ca7faed53c756e8","measurementId":"G-B7PG51SCWR"};
 const $ = id => document.getElementById(id);
+const miniMode=new URLSearchParams(location.search).get('mini')==='1';
+if(miniMode){document.body.classList.add('mini-mode');document.title='Together ♡ Mini Player'}
+
 const store = {get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
 const clean = s => (s||'').trim().toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,20)||'kita';
 const videoId = input => {try{const u=new URL(input);if(u.hostname==='youtu.be')return u.pathname.split('/')[1]?.match(/^[\w-]{11}$/)?.[0]||null;if(u.hostname.endsWith('youtube.com')||u.hostname.endsWith('youtube-nocookie.com')){const v=u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([\w-]{11})/)?.[1];return /^[\w-]{11}$/.test(v||'')?v:null}}catch{}return /^[\w-]{11}$/.test(input.trim())?input.trim():null};
@@ -136,6 +139,12 @@ async function join(){
 async function setCurrent(t,paused=false,position=0){const state={vid:t.vid,title:t.title||'Video YouTube',position,paused,updatedAt:Date.now()};try{if(mode==='online')await roomDoc().set({playback:state},{merge:true});else{cur=state;saveLocal();showVideo()}}catch(e){setStatus('Gagal memutar: '+e.message)}}
 async function control(action){if(!cur)return;const elapsed=cur.paused?0:Math.max(0,(Date.now()-cur.updatedAt)/1000);const position=action==='restart'?0:(Number(cur.position)||0)+elapsed;await setCurrent(cur,action==='pause',position)}
 async function addVideo(id,title){const t={vid:id,title:title||'Video YouTube',by:name(),at:Date.now()};try{if(mode==='online')await roomDoc().collection('playlist').add(t);else{t.id=String(t.at)+Math.random().toString(36).slice(2,5);tracks.push(t);saveLocal();drawList()}if(!cur)await setCurrent(t);return true}catch(e){setStatus('Gagal menambahkan video: '+e.message);return false}}
+$('popout').onclick=()=>{
+ const params=new URLSearchParams(location.search);params.set('room',clean($('room').value));params.set('mini','1');
+ const win=window.open(location.pathname+'?'+params.toString(),'together-mini-'+clean($('room').value),'popup=yes,width=560,height=530,resizable=yes,scrollbars=yes');
+ if(!win)setStatus('Pop-up diblokir browser. Izinkan pop-up untuk website Together lalu coba lagi.');
+};
+$('pip-help').onclick=()=>alert('Untuk video mengambang di atas aplikasi lain, coba fitur Picture-in-Picture bawaan browser pada video YouTube (jika tersedia). Tombol Mini Player membuka jendela kecil terpisah yang bisa kamu pindah dan resize.');
 $('join').onclick=join;
 $('copy-room').onclick=async()=>{const url=location.origin+location.pathname+'?room='+encodeURIComponent(clean($('room').value));try{await navigator.clipboard.writeText(url);$('copy-room').textContent='✓ Link disalin';setTimeout(()=>$('copy-room').textContent='🔗 Salin link room',1800)}catch{prompt('Salin link ini:',url)}};
 $('add').onclick=async()=>{const id=videoId($('url').value);if(!id){alert('Link YouTube tidak valid 🥲');return}const ok=await addVideo(id,$('ttl').value.trim());if(ok){$('url').value='';$('ttl').value=''}};

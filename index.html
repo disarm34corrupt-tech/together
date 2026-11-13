@@ -72,7 +72,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 </div>
 <div class="card p chat"><div class="chat-head"><h2>💬 Chat</h2><small id="online-count">Online: …</small></div><div id="online-list" class="presence" aria-label="Pengguna online"></div>
 <div class="msgs" id="msgs"></div>
-<div class="chat-compose" style="margin-top:10px"><input id="txt" placeholder="Ketik pesan… 💕"><input id="photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><button id="add-photo" class="soft" title="Kirim gambar" aria-label="Kirim gambar">📷</button><button id="send">Kirim</button></div><small class="note" id="photo-status">Foto JPG/PNG/WebP/GIF maksimal 3 MB (dikompresi sebelum dikirim).</small>
+<div class="chat-compose" style="margin-top:10px"><input id="txt" placeholder="Ketik pesan… 💕"><input id="photo" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden><button id="add-photo" class="soft" title="Kirim gambar" aria-label="Kirim gambar">📷</button><button id="send">Kirim</button></div><small class="note" id="chat-status" role="status" aria-live="polite">Siap mengirim pesan ♡</small><small class="note" id="photo-status">Foto JPG/PNG/WebP/GIF maksimal 3 MB (dikompresi sebelum dikirim).</small>
 </div></div>
 <p class="note">Gunakan kode room yang sama untuk menonton dan chat bersama. Sinkronisasi dapat sedikit berbeda karena jaringan dan kebijakan autoplay YouTube 🍃</p>
 <footer class="footer">Created by Kailea ♡</footer></div>
@@ -146,7 +146,24 @@ $('copy-room').onclick=async()=>{const url=location.origin+location.pathname+'?r
 $('add').onclick=async()=>{const id=videoId($('url').value);if(!id){alert('Link YouTube tidak valid 🥲');return}const ok=await addVideo(id,$('ttl').value.trim());if(ok){$('url').value='';$('ttl').value=''}};
 $('pause').onclick=()=>control('pause');$('resume').onclick=()=>control('resume');$('restart').onclick=()=>control('restart');
 $('next').onclick=()=>{if(!tracks.length)return;const index=tracks.findIndex(t=>cur&&t.vid===cur.vid);setCurrent(tracks[(index+1)%tracks.length])};
-async function send(){const input=$('txt');const text=input.value.trim().slice(0,500);if(!text)return;try{if(mode==='online'){if(!roomReady.chat)throw Error('Chat belum terhubung. Periksa status Firebase di atas.');await roomDoc().collection('chat').add({text,name:name(),uid,at:Date.now()})}else{const items=localChat();items.push({text,name:name(),uid});store.set('together-chat-'+room,JSON.stringify(items.slice(-100)));drawChat(items)}input.value=''}catch(e){setStatus('Gagal mengirim chat: '+e.message)}}
+async function send(){
+ const input=$('txt'),text=input.value.trim().slice(0,500),status=$('chat-status'),button=$('send');
+ if(!text)return;
+ button.disabled=true;status.textContent='⏳ Mengirim pesan…';
+ try{
+  if(mode==='online'){
+   if(!roomReady.chat)throw Error('Chat belum terhubung. Coba masuk room lagi.');
+   await roomDoc().collection('chat').add({text,name:name(),uid,at:Date.now()});
+  }else{
+   const items=localChat();items.push({text,name:name(),uid});store.set('together-chat-'+room,JSON.stringify(items.slice(-100)));drawChat(items);
+  }
+  input.value='';status.textContent='✓ Pesan terkirim ♡';
+ }catch(e){
+  const code=e?.code||'unknown';
+  status.textContent='❌ Pesan gagal: '+code+' — '+(code==='permission-denied'?'Firestore Rules menolak pengiriman. Perlu Publish aturan chat terbaru.':e.message||'Periksa koneksi.');
+  setStatus('Chat gagal mengirim ('+code+'). Lihat pesan di bawah kolom chat.');
+ }finally{button.disabled=false}
+}
 
 $('add-photo').onclick=()=>$('photo').click();
 $('photo').onchange=async()=>{const file=$('photo').files?.[0];$('photo').value='';if(!file)return;if(!/^image\/(jpeg|png|webp|gif)$/.test(file.type)||file.size>3*1024*1024){$('photo-status').textContent='Pilih JPG, PNG, WebP, atau GIF di bawah 3 MB.';return}

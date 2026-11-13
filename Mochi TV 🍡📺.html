@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mochi TV 🍡📺</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1f7e9;--card:#fffdf8;--g1:#cfe3bf;--g2:#7fa36d;--g3:#3f5c37;--p1:#ffd9e5;--p2:#ff8fb1;--tx:#34462f;--mut:#7c8f74;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1f2a1c;--card:#2a3827;--g1:#3d5236;--g2:#9cc58a;--g3:#d9ecc9;--p1:#5a2f3e;--p2:#ff9fbd;--tx:#eef6e6;--mut:#a3b99a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1f2a1c;--card:#2a3827;--g1:#3d5236;--g2:#9cc58a;--g3:#d9ecc9;--p1:#5a2f3e;--p2:#ff9fbd;--tx:#eef6e6;--mut:#a3b99a;color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Fredoka',system-ui,sans-serif;background-image:radial-gradient(circle at 10% 10%,var(--p1) 0,transparent 25%),radial-gradient(circle at 90% 80%,var(--g1) 0,transparent 30%)}
+.wrap{max-width:980px;margin:0 auto;padding:14px}
+h1{font-family:'Pacifico',cursive;font-weight:400;font-size:2rem;margin:6px 0;color:var(--g3);text-align:center}
+h1 span{color:var(--p2)}
+.top{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin-bottom:12px}
+input{font:inherit;padding:10px 14px;border-radius:999px;border:2px solid var(--g1);background:var(--card);color:var(--tx);min-width:0}
+input:focus{outline:none;border-color:var(--p2)}
+button{font:inherit;font-weight:500;border:0;border-radius:999px;padding:10px 16px;cursor:pointer;background:var(--g2);color:#fff;transition:transform .1s}
+button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{background:var(--g1);color:var(--g3)}
+.grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:24px;padding:14px;border:3px solid var(--g1);box-shadow:0 6px 0 var(--g1)}
+.card.p{border-color:var(--p1);box-shadow:0 6px 0 var(--p1)}
+.card h2{margin:0 0 10px;font-size:1.1rem;color:var(--g3)}
+.player{aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--g1);display:grid;place-items:center;color:var(--g3);text-align:center;padding:8px}
+.tv{position:relative;padding-top:44px}
+.ant{position:absolute;top:0;left:50%;width:120px;height:50px;transform:translateX(-50%)}
+.ant i{position:absolute;bottom:0;left:30px;width:4px;height:46px;background:var(--g3);border-radius:4px;transform-origin:bottom;transform:rotate(-28deg)}
+.ant i+i{left:86px;transform:rotate(28deg)}
+.ant:after{content:'';position:absolute;bottom:-4px;left:38px;width:44px;height:18px;background:var(--p2);border-radius:22px 22px 0 0}
+.tvb{position:relative;z-index:1;display:flex;gap:10px;background:var(--p2);border-radius:30px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+.screen{flex:1;min-width:0;background:#1d2a1a;border-radius:22px;padding:8px;border:4px solid var(--g1)}
+.side{width:40px;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:4px}
+.knob{width:26px;height:26px;border-radius:50%;background:var(--g1);border:3px solid var(--g3)}
+.knob.pk{background:var(--p1)}
+.spk{flex:1;width:26px;background:repeating-linear-gradient(var(--g3) 0 3px,transparent 3px 8px);border-radius:8px;opacity:.55}
+.legs{display:flex;justify-content:space-between;padding:0 48px}
+.legs i{width:24px;height:16px;background:var(--g3);border-radius:0 0 10px 10px}
+.player iframe{width:100%;height:100%;border:0}
+.now{margin:10px 2px;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row input{flex:1}
+.list{max-height:240px;overflow:auto;margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.item{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:14px;padding:8px 10px;cursor:pointer}
+.item:hover{background:var(--p1)}.item small{color:var(--mut)}
+.item b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{height:330px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:4px}
+.m{max-width:85%;padding:8px 12px;border-radius:16px;background:var(--g1);color:var(--g3);align-self:flex-start;word-wrap:break-word}
+.m.me{align-self:flex-end;background:var(--p1);color:var(--tx)}
+.m small{display:block;font-size:.7rem;opacity:.7}
+.note{font-size:.8rem;color:var(--mut);text-align:center;margin-top:10px}
+</style></head><body><div class="wrap">
+<h1>Mochi <span>TV</span> 🍡📺</h1>
+<div class="top">
+<input id="name" placeholder="Namamu 🌸" size="10" maxlength="20">
+<input id="room" placeholder="Kode ruang" size="10" maxlength="20" value="kita">
+<button id="join" class="pink">Masuk ruang ✨</button>
+</div>
+<div id="warn" class="note" hidden>Fitur bareng butuh login claude.ai dan akses edit/kontribusi dari pemilik link 💌</div>
+<div class="grid">
+<div>
+<div class="card"><h2>🎧 Lagi diputar bareng</h2>
+<div class="tv"><div class="ant"><i></i><i></i></div><div class="tvb"><div class="screen"><div class="player" id="player">Tempel link YouTube di bawah lalu pilih lagunya 🎶</div></div><div class="side"><span class="knob"></span><span class="knob pk"></span><div class="spk"></div></div></div><div class="legs"><i></i><i></i></div></div>
+<div class="now" id="now"></div>
+<div class="row"><button id="restart" class="soft">↺ Ulang bareng</button><button id="next" class="soft">⏭ Lagu berikutnya</button></div>
+</div>
+<div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
+<div class="row"><input id="url" placeholder="Link YouTube 🔗"><input id="ttl" placeholder="Judul (opsional)"><button id="add" class="pink">+ Tambah</button></div>
+<div class="list" id="list"></div></div>
+</div>
+<div class="card p chat"><h2>💬 Chat</h2>
+<div class="msgs" id="msgs"></div>
+<div class="row" style="margin-top:10px"><input id="txt" placeholder="Ketik pesan… 💕"><button id="send">Kirim</button></div>
+</div></div>
+<p class="note">Putar bareng dihitung dari waktu mulai, jadi kalau telat tinggal klik “Ulang bareng” 🍃</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let db=null,unsubs=[],room='',uid='anon',tracks=[],cur=null,curKey='';
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+$('name').value=ls.get('md-name')||'';$('room').value=ls.get('md-room')||'kita';
+const clean=s=>s.trim().toLowerCase().replace(/[^a-z0-9_-]/g,'')||'kita';
+function vid(u){const m=u.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);return m?m[1]:(/^[\w-]{11}$/.test(u.trim())?u.trim():null)}
+function render(){
+  if(!cur||!cur.vid){return}
+  const k=cur.vid+'|'+cur.startedAt;if(k===curKey)return;curKey=k;
+  const s=Math.max(0,Math.floor((Date.now()-cur.startedAt)/1000));
+  $('player').innerHTML='';const f=document.createElement('iframe');
+  f.allow='autoplay; encrypted-media; picture-in-picture';f.allowFullscreen=true;
+  f.src='https://www.youtube-nocookie.com/embed/'+cur.vid+'?autoplay=1&rel=0&start='+s;
+  $('player').appendChild(f);$('now').textContent='🎵 '+(cur.title||'Lagu')
+}
+async function setCur(t){const d={vid:t.vid,title:t.title||'',startedAt:Date.now()};cur=d;curKey='';render();
+  if(db)try{await db.doc('rooms/'+room+'/meta/state').set(d)}catch(e){}}
+function drawList(){
+  const l=$('list');l.innerHTML='';
+  if(!tracks.length){l.innerHTML='<div class="note">Belum ada lagu, yuk tambah 🌱</div>';return}
+  tracks.forEach(t=>{const d=document.createElement('div');d.className='item';
+    const b=document.createElement('b');b.textContent='🎶 '+(t.title||t.vid);
+    const s=document.createElement('small');s.textContent=t.by||'';
+    const x=document.createElement('button');x.className='soft';x.textContent='✕';x.style.padding='4px 10px';
+    x.onclick=e=>{e.stopPropagation();if(db)db.doc('rooms/'+room+'/playlist/'+t.id).delete().catch(()=>{})};
+    d.onclick=()=>setCur(t);d.append(b,s,x);l.appendChild(d)})
+}
+function drawChat(docs){
+  const m=$('msgs');m.innerHTML='';
+  docs.forEach(d=>{const v=d.data();const e=document.createElement('div');
+    e.className='m'+(v.uid===uid?' me':'');
+    const n=document.createElement('small');n.textContent=v.name||'Seseorang';
+    const t=document.createElement('span');t.textContent=v.text;e.append(n,t);m.appendChild(e)});
+  m.scrollTop=m.scrollHeight
+}
+async function join(){
+  unsubs.forEach(u=>u());unsubs=[];curKey='';
+  room=clean($('room').value);ls.set('md-room',room);ls.set('md-name',$('name').value);
+  if(!db){$('warn').hidden=false;return}
+  unsubs.push(db.doc('rooms/'+room+'/meta/state').onSnapshot(s=>{if(s.exists){cur=s.data();render()}},()=>{$('warn').hidden=false}));
+  unsubs.push(db.collection('rooms/'+room+'/playlist').orderBy('at','asc').limit(200).onSnapshot(q=>{tracks=q.docs.map(d=>({id:d.id,...d.data()}));drawList()},()=>{$('warn').hidden=false}));
+  unsubs.push(db.collection('rooms/'+room+'/chat').orderBy('at','asc').limit(150).onSnapshot(q=>drawChat(q.docs),()=>{}));
+}
+$('join').onclick=join;
+$('add').onclick=async()=>{const v=vid($('url').value);if(!v){alert('Link YouTube-nya belum valid 🥲');return}
+  const t={vid:v,title:$('ttl').value.trim(),by:$('name').value||'Aku',at:Date.now()};
+  $('url').value='';$('ttl').value='';
+  if(db){try{await db.doc('rooms/'+room+'/playlist/'+t.at+'-'+Math.random().toString(36).slice(2,6)).set(t)}catch(e){$('warn').hidden=false}}
+  else{t.id=String(t.at);tracks.push(t);drawList()}
+  if(!cur)setCur(t)};
+$('restart').onclick=()=>cur&&setCur(cur);
+$('next').onclick=()=>{if(!tracks.length)return;const i=tracks.findIndex(t=>cur&&t.vid===cur.vid);setCur(tracks[(i+1)%tracks.length])};
+async function send(){const x=$('txt').value.trim();if(!x||!db)return;$('txt').value='';
+  try{await db.doc('rooms/'+room+'/chat/'+Date.now()+'-'+Math.random().toString(36).slice(2,6)).set({text:x.slice(0,500),name:$('name').value||'Seseorang',uid,at:Date.now()})}catch(e){$('warn').hidden=false}}
+$('send').onclick=send;$('txt').onkeydown=e=>{if(e.key==='Enter')send()};
+(async()=>{
+  try{const [d,u]=await Promise.all([claude.use('db'),claude.use('user')]);db=d;if(u)uid=(await u.id())||'anon'}catch(e){}
+  join()
+})();
+</script></body></html>

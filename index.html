@@ -132,7 +132,7 @@ async function join(){
  try{
  const ref=roomDoc();unsubs.push(ref.onSnapshot(s=>{roomReady.room=true;updateConnection();cur=s.exists?(s.data().playback||null):null;showVideo()},e=>listenerError('room',e)));
  unsubs.push(ref.collection('playlist').orderBy('at').limit(200).onSnapshot(s=>{roomReady.playlist=true;updateConnection();tracks=s.docs.map(d=>({id:d.id,...d.data()}));drawList()},e=>listenerError('playlist',e)));
- unsubs.push(ref.collection('chat').orderBy('at').limit(150).onSnapshot(s=>{roomReady.chat=true;updateConnection();drawChat(s.docs.map(d=>d.data()))},e=>listenerError('chat',e)));
+ unsubs.push(ref.collection('chat').orderBy('at','desc').limit(150).onSnapshot(s=>{roomReady.chat=true;updateConnection();drawChat(s.docs.map(d=>d.data()).reverse())},e=>listenerError('chat',e)));
  unsubs.push(ref.collection('presence').limit(200).onSnapshot(s=>{presenceDocs=s.docs.map(d=>({id:d.id,...d.data()}));showPresence()},e=>{$('online-count').textContent='Online belum aktif · periksa Rules'}));
  await heartbeat();presenceTimer=setInterval(()=>{heartbeat();showPresence()},25000);
  updateConnection();

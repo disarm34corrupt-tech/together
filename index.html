@@ -66,7 +66,7 @@ button:hover{transform:scale(1.05)}button.pink{background:var(--p2)}button.soft{
 <div class="now" id="now"></div><div class="watch-tools"><button id="start-video" class="pink">▶ Mulai video di perangkat ini</button><input id="seek" type="range" min="0" max="100" value="0" aria-label="Posisi video"><small id="time">0:00 / 0:00</small><button id="sync-now" class="soft">↻ Sinkronkan</button></div><p class="note" id="player-note">Klik Mulai video jika browser memblokir autoplay. Geser progress untuk mengubah posisi tontonan bersama.</p>
 <div class="row"><button id="pause" class="soft">⏸ Pause bareng</button><button id="resume" class="soft">▶ Play bareng</button><button id="restart" class="soft">↺ Ulang bareng</button><button id="next" class="soft">⏭ Lagu berikutnya</button></div>
 </div>
-<div class="card p" style="margin-top:14px"><h2>🔎 Cari di YouTube</h2><div class="row"><input id="query" placeholder="Cari judul lagu atau video…" aria-label="Cari YouTube"><button class="pink" id="search">Cari ✨</button></div><p class="note" id="search-status">Pilih hasil pencarian untuk menambahkan ke playlist. Pencarian publik mungkin tidak selalu tersedia.</p><div id="search-results" class="search-results"></div></div><div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
+<div class="card p" style="margin-top:14px"><h2>🔎 Cari di YouTube</h2><div class="row"><input id="query" placeholder="Cari judul lagu atau video…" aria-label="Cari YouTube"><button class="pink" id="search">Cari ✨</button></div><div class="row" style="margin-top:8px"><input id="yt-api-key" type="password" placeholder="YouTube API key (pengaturan sekali)" autocomplete="off" aria-label="YouTube Data API key"><button id="save-yt-key" class="soft">Simpan key</button></div><p class="note" id="search-status">Untuk pencarian video langsung, aktifkan YouTube Data API v3 dan masukkan API key. Key disimpan di browser ini saja.</p><div id="search-results" class="search-results"></div></div><div class="card p" style="margin-top:14px"><h2>📀 Playlist &amp; riwayat kita</h2>
 <div class="row"><input id="url" placeholder="Link YouTube 🔗"><input id="ttl" placeholder="Judul (opsional)"><button id="add" class="pink">+ Tambah</button></div>
 <div class="list" id="list"></div></div>
 </div>
@@ -143,7 +143,33 @@ $('pause').onclick=()=>control('pause');$('resume').onclick=()=>control('resume'
 $('next').onclick=()=>{if(!tracks.length)return;const index=tracks.findIndex(t=>cur&&t.vid===cur.vid);setCurrent(tracks[(index+1)%tracks.length])};
 async function send(){const input=$('txt');const text=input.value.trim().slice(0,500);if(!text)return;try{if(mode==='online'){if(!roomReady.chat)throw Error('Chat belum terhubung. Periksa status Firebase di atas.');await roomDoc().collection('chat').add({text,name:name(),uid,at:Date.now()})}else{const items=localChat();items.push({text,name:name(),uid});store.set('together-chat-'+room,JSON.stringify(items.slice(-100)));drawChat(items)}input.value=''}catch(e){setStatus('Gagal mengirim chat: '+e.message)}}
 $('send').onclick=send;$('txt').onkeydown=e=>{if(e.key==='Enter')send()};
-async function searchVideos(){const q=$('query').value.trim();if(!q)return;$('search').disabled=true;$('search-status').textContent='Mencari video…';$('search-results').replaceChildren();try{let results=null;for(const host of ['https://inv.nadeko.net','https://invidious.nerdvpn.de']){const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),5000);try{const r=await fetch(host+'/api/v1/search?q='+encodeURIComponent(q)+'&type=video',{signal:ctrl.signal});if(!r.ok)continue;const data=await r.json();if(Array.isArray(data)){results=data;break}}catch{}finally{clearTimeout(timer)}}if(!results)throw Error('Layanan pencarian publik tidak tersedia');const items=results.filter(x=>/^[\w-]{11}$/.test(x.videoId||'')).slice(0,12);$('search-status').textContent=items.length+' hasil ditemukan';for(const v of items){const row=document.createElement('div');row.className='search-result';const img=document.createElement('img');img.src='https://i.ytimg.com/vi/'+v.videoId+'/mqdefault.jpg';img.loading='lazy';img.alt='Thumbnail';const title=document.createElement('strong');title.textContent=v.title||'Video YouTube';const btn=document.createElement('button');btn.className='pink';btn.textContent='+ Playlist';btn.onclick=async()=>{if(await addVideo(v.videoId,v.title))btn.textContent='✓ Ditambahkan'};row.append(img,title,btn);$('search-results').append(row)}if(!items.length)throw Error('Tidak ada hasil yang tersedia')}catch(e){$('search-status').textContent='Pencarian langsung belum tersedia. Untuk sekarang, cari di YouTube lalu tempel link ke Playlist.';const a=document.createElement('a');a.href='https://www.youtube.com/results?search_query='+encodeURIComponent(q);a.target='_blank';a.rel='noopener noreferrer';a.textContent='Cari di YouTube';$('search-results').append(a)}finally{$('search').disabled=false}}
+
+$('yt-api-key').value=store.get('together-yt-key')||'';
+$('save-yt-key').onclick=()=>{const key=$('yt-api-key').value.trim();if(!key){store.set('together-yt-key','');$('search-status').textContent='API key dihapus dari browser ini.';return}store.set('together-yt-key',key);$('search-status').textContent='API key tersimpan di browser ini ♡ Sekarang coba cari video!'};
+async function searchVideos(){
+ const q=$('query').value.trim();if(!q)return;
+ const key=store.get('together-yt-key')||'';
+ if(!key){$('search-status').textContent='Masukkan YouTube Data API key di bawah kotak pencarian, lalu klik Simpan key.';$('yt-api-key').focus();return}
+ $('search').disabled=true;$('search-status').textContent='Mencari "'+q+'"…';$('search-results').replaceChildren();
+ try{
+ const url='https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=12&q='+encodeURIComponent(q)+'&key='+encodeURIComponent(key);
+ const response=await fetch(url);const data=await response.json();
+ if(!response.ok)throw Error(data?.error?.message||'Gagal menghubungi YouTube');
+ const items=(data.items||[]).filter(v=>/^[\w-]{11}$/.test(v.id?.videoId||''));
+ $('search-status').textContent=items.length+' video ditemukan untuk "'+q+'"';
+ for(const v of items){
+ const row=document.createElement('div');row.className='search-result';
+ const img=document.createElement('img');img.src=v.snippet.thumbnails?.medium?.url||'https://i.ytimg.com/vi/'+v.id.videoId+'/mqdefault.jpg';img.loading='lazy';img.alt='Thumbnail video';
+ const details=document.createElement('div');details.style.cssText='flex:1;min-width:0';
+ const title=document.createElement('strong');title.textContent=v.snippet.title||'Video YouTube';
+ const channel=document.createElement('small');channel.textContent=v.snippet.channelTitle||'';channel.style.cssText='display:block;color:var(--mut);margin-top:4px';details.append(title,channel);
+ const btn=document.createElement('button');btn.className='pink';btn.textContent='+ Playlist';btn.onclick=async()=>{btn.disabled=true;if(await addVideo(v.id.videoId,v.snippet.title)){btn.textContent='✓ Ditambahkan'}else{btn.disabled=false}};
+ row.append(img,details,btn);$('search-results').append(row)
+ }
+ if(!items.length)$('search-status').textContent='Tidak ada video yang bisa di-embed untuk pencarian ini.';
+ }catch(e){$('search-status').textContent='Pencarian gagal: '+e.message+'. Periksa API key, pembatasan domain, dan kuota YouTube Data API.'}
+ finally{$('search').disabled=false}
+}
 $('search').onclick=searchVideos;$('query').onkeydown=e=>{if(e.key==='Enter')searchVideos()};
 (async()=>{try{firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();const credential=await auth.signInAnonymously();uid=credential.user.uid;mode='online';await join();syncInterval=setInterval(()=>{if(cur&&!cur.paused)syncPlayback()},10000)}catch(e){mode='local';uid='local-'+Math.random().toString(36).slice(2);await join();setStatus('🔴 Firebase belum terhubung ('+(e.code||e.message)+'). Mode lokal aktif, jadi chat tidak terlihat di perangkat lain. Aktifkan Anonymous Authentication dan Firestore.')}})();
 
